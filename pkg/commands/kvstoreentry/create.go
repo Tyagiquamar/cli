@@ -290,6 +290,9 @@ func (c *CreateCommand) ProcessDir(in io.Reader, out io.Writer) error {
 				mu.Unlock()
 				return
 			}
+			defer func() {
+				_ = f.Close()
+			}()
 
 			lr, err := fastly.FileLengthReader(f)
 			if err != nil {
@@ -317,9 +320,14 @@ func (c *CreateCommand) ProcessDir(in io.Reader, out io.Writer) error {
 				// NOTE: you can't type assert the error as it's not exported.
 				// https://github.com/golang/go/issues/54173
 				if strings.Contains(err.Error(), "net/http: cannot rewind body after connection loss") {
-					err = insertKey(opts)
-					if err == nil {
-						return
+					// The failed attempt may have already consumed the file, so
+					// rewind it before retrying, otherwise the retry sends a short
+					// or empty body while still declaring the full content length.
+					if _, seekErr := f.Seek(0, io.SeekStart); seekErr == nil {
+						err = insertKey(opts)
+						if err == nil {
+							return
+						}
 					}
 				}
 				mu.Lock()

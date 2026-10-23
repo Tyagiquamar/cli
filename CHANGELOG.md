@@ -10,6 +10,7 @@
 ### Bug Fixes:
 
 - fix(ai-runtime-control): update AI Runtime Control command descriptions to reflect the latest API references ([#1939](https://github.com/fastly/cli/pull/1939))
+- fix(kv-store-entry): close the files opened by `create --dir` after each upload and rewind them before retrying a dropped connection ([#1942](https://github.com/fastly/cli/issues/1942))
 
 ### Enhancements:
 

@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -188,6 +190,76 @@ func TestCreateCommand(t *testing.T) {
 	}
 
 	testutil.RunCLIScenarios(t, []string{root.CommandName, "create"}, scenarios)
+}
+
+func TestCreateCommandDirClosesUploadedFiles(t *testing.T) {
+	const storeID = "store-id-123"
+
+	var body io.Reader
+
+	testutil.RunCLIScenarios(t, []string{root.CommandName, "create"}, []testutil.CLIScenario{
+		{
+			Args:  fmt.Sprintf("--store-id %s --dir %s", storeID, filepath.Join("testdata", "example")),
+			Stdin: []string{"y"},
+			API: &mock.API{
+				InsertKVStoreKeyFn: func(_ context.Context, i *fastly.InsertKVStoreKeyInput) error {
+					body = i.Body
+					return nil
+				},
+			},
+			WantOutput: "SUCCESS: Inserted 1 keys into KV Store",
+		},
+	})
+
+	if body == nil {
+		t.Fatal("expected InsertKVStoreKey to receive a body")
+	}
+	if _, err := body.Read(make([]byte, 1)); !errors.Is(err, fs.ErrClosed) {
+		t.Fatalf("expected the uploaded file to be closed, got error: %v", err)
+	}
+}
+
+func TestCreateCommandDirRetriesWithFullBody(t *testing.T) {
+	const storeID = "store-id-123"
+
+	want, err := os.ReadFile(filepath.Join("testdata", "example", "foo.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		attempts int
+		gotBody  string
+	)
+
+	testutil.RunCLIScenarios(t, []string{root.CommandName, "create"}, []testutil.CLIScenario{
+		{
+			Args:  fmt.Sprintf("--store-id %s --dir %s", storeID, filepath.Join("testdata", "example")),
+			Stdin: []string{"y"},
+			API: &mock.API{
+				InsertKVStoreKeyFn: func(_ context.Context, i *fastly.InsertKVStoreKeyInput) error {
+					b, err := io.ReadAll(i.Body)
+					if err != nil {
+						return err
+					}
+					attempts++
+					if attempts == 1 {
+						return errors.New("net/http: cannot rewind body after connection loss")
+					}
+					gotBody = string(b)
+					return nil
+				},
+			},
+			WantOutput: "SUCCESS: Inserted 1 keys into KV Store",
+		},
+	})
+
+	if attempts != 2 {
+		t.Fatalf("expected 2 upload attempts, got %d", attempts)
+	}
+	if gotBody != string(want) {
+		t.Fatalf("expected the retry to resend the full file content %q, got %q", want, gotBody)
+	}
 }
 
 func TestDeleteCommand(t *testing.T) {
