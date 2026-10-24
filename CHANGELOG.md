@@ -4,13 +4,27 @@
 
 ### Breaking:
 
+- breaking(ai-runtime-control): `key create` no longer accepts the `--user-id` flag, as it was removed from the API ([#1949](https://github.com/fastly/cli/pull/1949))
+- breaking(json): `--json` output for `ai-runtime-control usage-metrics list`, `ngwaf workspace list`, `ngwaf rule list` and `ngwaf workspace rule list` is now a bare array instead of an object with `data` and `meta` ([#1949](https://github.com/fastly/cli/pull/1949))
+
 ### Bug Fixes:
 
 - fix(compute/serve): persist default `override_host` to `fastly.toml` for Viceroy and log when applied ([#1940](https://github.com/fastly/cli/pull/1940))
+- fix(ai-runtime-control): update AI Runtime Control command descriptions to reflect the latest API references ([#1939](https://github.com/fastly/cli/pull/1939))
 
 ### Enhancements:
 
 ### Dependencies:
+- build(deps): `github.com/fastly/go-fastly` from v17.8.0 to v18.0.0 ([#1949](https://github.com/fastly/cli/pull/1949))
+- build(deps): `golang.org/x/term` from 0.46.0 to 0.47.0 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `golang.org/x/crypto` from 0.57.0 to 0.58.0 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `golang.org/x/mod` from 0.41.0 to 0.42.0 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `github.com/nwaples/rardecode/v2` from 2.4.2 to 2.4.5 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `github.com/klauspost/compress` from 1.20.1 to 1.20.3 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `github.com/klauspost/pgzip` from 1.2.7 to 1.3.0 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `github.com/mattn/go-runewidth` from 0.0.30 to 0.0.31 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `golang.org/x/net` from 0.59.0 to 0.60.0 ([#1944](https://github.com/fastly/cli/pull/1944))
+- build(deps): `golang.org/x/text` from 0.42.0 to 0.43.0 ([#1944](https://github.com/fastly/cli/pull/1944))
 
 ## [v16.2.0](https://github.com/fastly/cli/releases/tag/v16.2.0) (2026-10-15)
 
